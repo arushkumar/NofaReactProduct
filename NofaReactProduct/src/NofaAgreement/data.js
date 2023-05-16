@@ -1,0 +1,1 @@
+export const Agreement = ['Upon Dgs Approval through january', 'Upon Dgs Approval through February']

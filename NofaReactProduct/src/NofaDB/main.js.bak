@@ -1,0 +1,226 @@
+import React, { useEffect, useState } from 'react';
+import './ab434.css';
+import { Form, FormElement } from "@progress/kendo-react-form";
+import { Button } from "@progress/kendo-react-buttons";
+// import { Stepper } from "@progress/kendo-react-layout";
+
+import OrgInfo from "./orgInfo";
+import Nofa from "./nofa";
+import { useHistory } from "react-router-dom";
+import nofaServices from '../services/adminServices';
+// import ContactList from './programSelection';
+import Swal from 'sweetalert2';
+
+function App(props) {
+
+  // window.scrollTo({ top: 0, behavior: 'smooth' })
+  const [step, setStep] = React.useState(0);
+  const history = useHistory();
+  // const [orientation, setOrientation] = React.useState("horinzontal");
+  const [steps, setSteps] = React.useState([
+    {
+      label: "Nofa",
+      isValid: undefined,
+    },
+    {
+      label: "Nofa Tab",
+      isValid: undefined,
+    },
+    {
+      label: "Nofa Line Item Type",
+      isValid: undefined,
+    },
+
+
+  ]);
+  const [loader, setLoader] = React.useState(false)
+  const [formState, setFormState] = React.useState({});
+  const [org, setOrg] = React.useState();
+
+  const lastStepIndex = steps.length - 1;
+  const isLastStep = lastStepIndex === step;
+
+  //  console.log(form);
+  //  console.log(customer);
+  /*****************************/
+  const handleChange = React.useCallback(
+    (event) => {
+      setStep(() => event.value);
+    },
+    [step, setStep],
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  );
+  const isPreviousStepsValid =
+    steps
+      .slice(0, step)
+      .findIndex((currentStep) => currentStep.isValid === false) === -1;
+
+  const onStepSubmit = React.useCallback(
+    (event) => {
+
+      const { isValid, values } = event;
+      const currentSteps = steps.map((currentStep, index) => ({
+        ...currentStep,
+        isValid: index === step ? isValid : currentStep.isValid,
+      }));
+      setSteps(currentSteps);
+      if (!isValid) {
+        return;
+      }
+      setStep(() => Math.min(step + 1, lastStepIndex));
+      setFormState(values);
+
+      if (isPreviousStepsValid && isValid) {
+
+        const datavalue = {
+          "name": values.name,
+          "type": values.type,
+          "county": values.county,
+          "region": values.region,
+          "address": values.address,
+          "zip": values.zip,
+          "city": values.city,
+          "state": values.state,
+          "tribal_entity": values.tribal_entity,
+          "contact_name": values.contact_name,
+          "contact_title": values.contact_title,
+          "contact_email": values.contact_email,
+          "contact_phone": values.contact_phone,
+          "alt_contact": values.alt_contact,
+          "alt_contact_name": values.alt_contact_name,
+          "alt_contact_title": values.alt_contact_title,
+          "alt_contact_email": values.alt_contact_email,
+          "alt_contact_phone": values.alt_contact_phone
+        }
+        nofaServices.createOrganization(props.match.params.id, datavalue).then(
+          response => {
+            Swal.fire({
+              title: 'Success',
+              text: 'Organization update succesfully.',
+              icon: 'success',
+              confirmButtonText: 'Ok'
+            }).then(function () {
+              history.push({
+                pathname: "/organization/view"
+              });
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            });
+
+          },
+          error => {
+
+          }
+        );
+
+
+      }
+    },
+    [steps, isLastStep, isPreviousStepsValid, step, lastStepIndex]
+  );
+  const onPrevClick = React.useCallback(
+    (event) => {
+      event.preventDefault();
+      setStep(() => Math.max(step - 1, 0));
+    },
+    [step, setStep],
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  );
+
+  return (
+    <div className="container">
+      <div className="AB434-CSS12">
+       
+
+        <div className="row">
+
+          <div className="col-md-12">
+            <div>
+              <h1 className="headsec">Create Nofa</h1>
+
+            </div>
+          </div>
+        </div>
+        <div className="AB434-CSS">
+          <div className="row">
+
+
+            <div className="col-md-8 offset-md-2">
+              {/* <Stepper onChange={handleChange} value={step} items={steps} orientation={orientation} /> */}
+              <Form
+                initialValues={org}
+                key={JSON.stringify(org)}
+                onSubmitClick={onStepSubmit}
+                render={(formRenderProps) => (
+                  <div className="button-bootm"
+                    style={{
+                      alignSelf: "center",
+                    }}
+                  >
+                    <FormElement>
+                      {step === 0 && <Nofa />}
+                      {step === 1 && <OrgInfo />}
+                     
+                      {/* {step === 0 && <OrgInfo
+                        peramid={props.match.params.id}
+                      />}
+ {Nofa === 1 && <Nofa />} */}
+                      <span
+                        style={{
+                          marginTop: "40px",
+                        }}
+                        className={"k-form-separator"}
+                      />
+                      <div
+                        style={{
+                          justifyContent: "space-between",
+                          alignContent: "center",
+                        }}
+                        className={"k-form-buttons k-buttons-end"}
+                      >
+                        <span
+                          style={{
+                            alignSelf: "center",
+                          }}
+                        >
+                          Step {step + 1} of 2
+                        </span>
+                        <div className="btn123">
+
+                          {step !== 0 ? (
+                            <Button
+                              style={{
+                                marginRight: "16px",
+                              }}
+                              onClick={onPrevClick}
+                            >
+                              Previous
+                            </Button>
+                          ) : undefined}
+                          <Button
+                            primary={true}
+                            disabled={!formRenderProps.allowSubmit}
+
+                            onClick={formRenderProps.onSubmit}
+                          >
+                            {isLastStep ? "Submit" : "Next"}
+                          </Button>
+                        </div>
+                      </div>
+                    </FormElement>
+                  </div>
+                )}
+              />
+            </div>
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+    </div>
+  );
+};
+export default App;
